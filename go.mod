@@ -1,8 +1,11 @@
-module github.gom/hashicorp/hello-vault-go/quick-start
+module main
 
 go 1.21
 
-require github.com/hashicorp/vault/api v1.10.0
+require (
+	github.com/hashicorp/vault/api v1.10.0
+	github.com/hashicorp/vault/api/auth/kubernetes v0.5.0
+)
 
 require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
@@ -19,7 +22,6 @@ require (
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/vault/api/auth/kubernetes v0.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
