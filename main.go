@@ -55,6 +55,9 @@ func main() {
 			err = SendRequest(vaultUrl+"/v1/"+authPath, "", "POST", jwtPayload, vaultLoginResponse)
 			if err != nil {
 				fmt.Println("Error getting response from Vault k8s login:", err)
+				fmt.Println("vault url is", vaultUrl+"/v1/"+authPath)
+				fmt.Println("vaultloign payload is", string(jwtPayload))
+				fmt.Println("vaultLoginResponse is ", vaultLoginResponse)
 				return
 			}
 

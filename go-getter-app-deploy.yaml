@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-getter-app
+  namespace: go-app
+spec:
+  selector:
+    matchLabels:
+      app: go-getter-app
+  template:
+    metadata:
+      labels:
+        app: go-getter-app
+    spec:
+      serviceAccountName: go-vault
+      containers:
+        - name: go-getter-app
+          image: ghcr.io/govindkailas/go-getter-app:main
+          env:
+            - name: VAULT_ADDR
+              value: https://vault.vault-namespace:8200
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          ports:
+            - containerPort: 8080
