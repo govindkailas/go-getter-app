@@ -43,7 +43,7 @@ func main() {
 			authPath := "auth/kubernetes/login"
 
 			// Create the payload for Vault authentication
-			pl := VaultJWTPayload{Role: "webapp", JWT: jwt}
+			pl := VaultJWTPayload{Role: "go-app-role", JWT: jwt}
 			jwtPayload, err := json.Marshal(pl)
 			if err != nil {
 				fmt.Println("Error encoding Vault request JSON:", err)
