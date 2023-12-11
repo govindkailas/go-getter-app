@@ -62,8 +62,8 @@ func main() {
 			if err != nil {
 				fmt.Println("Error getting response from Vault k8s login:", err)
 				fmt.Println("vault url is", vaultUrl+"/v1/"+authPath)
-				fmt.Println("vaultloign payload is", string(jwtPayload))
-				fmt.Println("vaultLoginResponse is ", vaultLoginResponse)
+				fmt.Println("vault login payload is", string(jwtPayload))
+				fmt.Println("vaultLoginResponse is ", vaultLoginResponse.Auth.ClientToken)
 				return
 			}
 
