@@ -184,7 +184,7 @@ func getSecretWithKubernetesAuth() (string, error) {
 		log.Println("APPROLE environment variable not set, defaulting to", approle)
 	}
 	k8sAuth, err := kubernetes.NewKubernetesAuth(
-		approle,
+		"go-app-role", // role name
 		kubernetes.WithServiceAccountTokenPath("/var/run/secrets/kubernetes.io/serviceaccount/token"),
 	)
 	if err != nil {
