@@ -2,7 +2,7 @@
 go-getter-app is a simple go microservice that exposes two API endpoints to read and write to VAULT
 
 For the sake of clarity and easiness, let's deploy everything on Kubernetes.
-If you dont have K8s cluster, get one from [microk8s](https://microk8s.io/#install-microk8s)
+If you dont have K8s cluster, create one locally using [microk8s](https://microk8s.io/#install-microk8s)
 
 _Create a namespace for vault_
 ```
