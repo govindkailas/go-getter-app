@@ -24,6 +24,10 @@ This will bring up the vault in dev mode and it's not recommended for production
 _Check the status of helm deployment_
 ```
 kubectl get all -n vault
+```
+
+If the deployment was successful , you should see the vault pod in Running state and the vault service.
+```
 NAME                                        READY   STATUS    RESTARTS   AGE
 pod/vault-agent-injector-7f7f68d457-2dtgp   1/1     Running   0          44s
 pod/vault-0                                 1/1     Running   0          44s
