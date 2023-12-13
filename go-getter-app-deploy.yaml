@@ -3,7 +3,10 @@ kind: Deployment
 metadata:
   name: go-getter-app
   namespace: go-app
+  labels:
+    app: go-getter-app
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: go-getter-app
@@ -12,16 +15,37 @@ spec:
       labels:
         app: go-getter-app
     spec:
-      serviceAccountName: go-vault
+      serviceAccountName: go-app-vault-auth-sa
       containers:
         - name: go-getter-app
           image: ghcr.io/govindkailas/go-getter-app:main
+          imagePullPolicy: Always
           env:
             - name: VAULT_ADDR
-              value: https://vault.vault-namespace:8200
+              value: 'http://vault.vault:8200'
+            - name: JWT_PATH
+              value: '/var/run/secrets/kubernetes.io/serviceaccount/token'
+            - name: SERVICE_PORT
+              value: '8080'
+            - name: SECRET_PATH
+              value: 'go-app/data/user01'
+            - name: APPROLE
+              value: go-app-role  
           resources:
             limits:
-              memory: "128Mi"
-              cpu: "200m"
-          ports:
-            - containerPort: 8080
+              cpu: 100m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-app-service
+  namespace: go-app
+spec:
+  selector:
+    app: go-getter-app
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  type: NodePort # Can be changed to LB or ClusterIP based on your need
