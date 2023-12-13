@@ -94,7 +94,9 @@ Now, we have to allow vault to communicate to K8s cluster using the `/config` en
 ```
 kubectl -n vault  exec -it vault-0 -- sh
 # After landing into the vault pod run the below,
-vault write auth/kubernetes/config token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt issuer="kubernetes/serviceaccount"
+vault write auth/kubernetes/config token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
+kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt issuer="kubernetes/serviceaccount"
 ```
 ⚠️ _Note that it's important to mention `issuer="kubernetes/serviceaccount"` otherwise vault will reject the access as it will not know the token issuer. The issuer might be different if you are on a cloud provider k8s._ 
 
@@ -142,7 +144,7 @@ jwt_token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) #get the se
 curl --request POST \
     --data '{"jwt": "'$jwt_token'", "role": "go-app-role"}' \
     ${VAULT_ADDR}/v1/auth/kubernetes/login | jq  # Check if we are getting the expected result with the client token
-access_token=$(curl -s --request POST --data '{"jwt": "$jwt_token", "role": "go-app-role"}' ${VAULT_ADDR}/v1/auth/kubernetes/login| jq -r .auth.client_token)
+access_token=$(curl -s --request POST --data '{"jwt": "'$jwt_token'", "role": "go-app-role"}' ${VAULT_ADDR}/v1/auth/kubernetes/login | jq -r '.auth.client_token')
 curl -H "X-Vault-Token: $access_token" -H "X-Vault-Namespace: vault" -X GET ${VAULT_ADDR}/v1/go-app/data/user01
 ## The result below shows the secret is retrieved successfully from vault
 {"request_id":"3f80cc09-48c0-ad3f-ee3d-43d966e80c67","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"appaname":"go-getter-app","password":"My_Secure_Password"},"metadata":{"created_time":"2023-12-13T06:03:04.584728825Z","custom_metadata":null,"deletion_time":"","destroyed":false,"version":4}},"wrap_info":null,"warnings":null,"auth":null}
