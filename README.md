@@ -96,7 +96,7 @@ kubectl -n vault  exec -it vault-0 -- sh
 # After landing into the vault pod run the below,
 vault write auth/kubernetes/config token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt issuer="kubernetes/serviceaccount"
 ```
-⚠️_Note that it's important to mention `issuer="kubernetes/serviceaccount"` otherwise vault will reject the access as it will not know the token issuer. The issuer might be different if you are on a cloud provider k8s._ 
+⚠️ _Note that it's important to mention `issuer="kubernetes/serviceaccount"` otherwise vault will reject the access as it will not know the token issuer. The issuer might be different if you are on a cloud provider k8s._ 
 
 The next step will be creating `namespace` and `service account` for deploying the `go-getter-app` which would talk to vault and fetch the secrets. 
 
@@ -115,7 +115,7 @@ vault write auth/kubernetes/role/go-app-role \
 ```
 
 How do we test if the vault role binding works as expected? 
-If you are confident enougth, you can directly deploy the app `kubectl apply -f go-getter-app.yaml` and it should be able to fetch secrets from vault using the auth methods we configured.
+If you are confident enougth,go ahead and deploy the app `kubectl apply -f go-getter-app.yaml` and it should be able to fetch secrets from vault using the auth methods we configured.
 
 But if you want to see pod and vault communicate each other, create a simple pod in the `go-app` namespace with the service account and check if it can read secrets from Vault:
 
@@ -132,7 +132,7 @@ spec:
   serviceAccountName: go-app-vault-auth-sa
 
 ```
-Save the abobe manifest as `vault-client.yaml` and run `kubectl apply -f vault-client.yaml`
+Save the above manifest as `vault-client.yaml` and run `kubectl apply -f vault-client.yaml`
 Once the pod is running, exec into it:
 ```
 kubectl -n go-app exec -it vault-client -- bash
