@@ -1,3 +1,18 @@
+# Create a namespace for the app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: go-app
+---
+# Create a service account for the app
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: go-app-vault-auth-sa
+ namespace: go-app
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
