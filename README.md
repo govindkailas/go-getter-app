@@ -1,5 +1,5 @@
 # go-getter-app
-go-getter-app is a simple go microservice that exposes two API endpoints to read and write to VAULT
+The `go-getter-app` is a simple go microservice that exposes two API endpoints to read and write to [VAULT](https://developer.hashicorp.com/vault)
 
 For the sake of clarity and easiness, let's deploy everything on Kubernetes.
 If you dont have K8s cluster, create one locally using [microk8s](https://microk8s.io/#install-microk8s)
@@ -26,7 +26,7 @@ _Check the status of helm deployment_
 kubectl get all -n vault
 ```
 
-If the deployment was successful , you should see the vault pod in Running state and the vault service.
+You should see the vault pod in `Running` state + the vault service if the deployment was successful.
 ```
 NAME                                        READY   STATUS    RESTARTS   AGE
 pod/vault-agent-injector-7f7f68d457-2dtgp   1/1     Running   0          44s
@@ -115,9 +115,9 @@ vault write auth/kubernetes/role/go-app-role \
 ```
 
 How do we test if the vault role binding works as expected? 
-If you are confident enougth,go ahead and deploy the app `kubectl apply -f go-getter-app.yaml` and it should be able to fetch secrets from vault using the auth methods we configured.
+If you are confident enough, go ahead and deploy the app `kubectl apply -f go-getter-app.yaml` and it should be able to fetch secrets from the vault using the auth methods we configured.
 
-But if you want to see pod and vault communicate each other, create a simple pod in the `go-app` namespace with the service account and check if it can read secrets from Vault:
+But if you want to see pod and vault communicate with each other, create a simple pod in the `go-app` namespace with the service account and check if it can read secrets from Vault:
 
 ```
 apiVersion: v1
@@ -141,10 +141,10 @@ VAULT_ADDR=http://vault.vault:8200 # <vault service name>.<namespace>:<port>
 jwt_token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) #get the service account token which is mounted to the pod
 curl --request POST \
     --data '{"jwt": "'$jwt_token'", "role": "go-app-role"}' \
-    ${VAULT_ADDR}/v1/auth/kubernetes/login | jq  # check if we are getting the expected result with client token
+    ${VAULT_ADDR}/v1/auth/kubernetes/login | jq  # Check if we are getting the expected result with the client token
 access_token=$(curl -s --request POST --data '{"jwt": "$jwt_token", "role": "go-app-role"}' ${VAULT_ADDR}/v1/auth/kubernetes/login| jq -r .auth.client_token)
 curl -H "X-Vault-Token: $access_token" -H "X-Vault-Namespace: vault" -X GET ${VAULT_ADDR}/v1/go-app/data/user01
-## Result below shows the secret is retrieved successfully from vault
+## The result below shows the secret is retrieved successfully from vault
 {"request_id":"3f80cc09-48c0-ad3f-ee3d-43d966e80c67","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"appaname":"go-getter-app","password":"My_Secure_Password"},"metadata":{"created_time":"2023-12-13T06:03:04.584728825Z","custom_metadata":null,"deletion_time":"","destroyed":false,"version":4}},"wrap_info":null,"warnings":null,"auth":null}
 
 ```
@@ -154,7 +154,7 @@ Now that we have confirmed the vault role binding works, let's deploy the go-get
 kubectl apply -f go-getter-app.yaml
 ```
 
-Referances: 
+References: 
 - https://github.com/hashicorp-education/learn-vault-hello-world/tree/main 
 - https://github.com/hashicorp/vault-examples/tree/main/examples/auth-methods/kubernetes 
 - https://devopscube.com/vault-in-kubernetes/
