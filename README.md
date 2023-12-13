@@ -154,3 +154,7 @@ Now that we have confirmed the vault role binding works, let's deploy the go-get
 kubectl apply -f go-getter-app.yaml
 ```
 
+Referances: 
+- https://github.com/hashicorp-education/learn-vault-hello-world/tree/main 
+- https://github.com/hashicorp/vault-examples/tree/main/examples/auth-methods/kubernetes 
+- https://devopscube.com/vault-in-kubernetes/
