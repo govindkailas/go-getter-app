@@ -98,7 +98,8 @@ vault write auth/kubernetes/config token_reviewer_jwt="$(cat /var/run/secrets/ku
 ```
 _Note that it's important to mention `issuer="kubernetes/serviceaccount"` otherwise vault will reject the access as it will not know the token issuer. The issuer might be different if you are on a cloud provider k8s._ 
 
-The next step will be creating `namespace` and `service account` for deploying the `go-getter-app` which would talk to vault and fetch the secrets.
+The next step will be creating `namespace` and `service account` for deploying the `go-getter-app` which would talk to vault and fetch the secrets. 
+
 ```
 kubectl create ns go-app
 kubectl -n go-app create serviceaccount go-app-vault-auth-sa
@@ -113,7 +114,10 @@ vault write auth/kubernetes/role/go-app-role \
         ttl=72h
 ```
 
-How do we test if the vault role binding works as expected? Let's deploy a simple pod in the `go-app` namespace with the service account and check if it can read secrets from Vault:
+How do we test if the vault role binding works as expected? 
+If you are confident enougth, you can directly deploy the app `kubectl apply -f go-getter-app.yaml` and it should be able to fetch secrets from vault using the auth methods we configured.
+
+But if you want to see pod and vault communicate each other, create a simple pod in the `go-app` namespace with the service account and check if it can read secrets from Vault:
 
 ```
 apiVersion: v1
@@ -143,5 +147,10 @@ curl -H "X-Vault-Token: $access_token" -H "X-Vault-Namespace: vault" -X GET ${VA
 ## Result below shows the secret is retrieved successfully from vault
 {"request_id":"3f80cc09-48c0-ad3f-ee3d-43d966e80c67","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"appaname":"go-getter-app","password":"My_Secure_Password"},"metadata":{"created_time":"2023-12-13T06:03:04.584728825Z","custom_metadata":null,"deletion_time":"","destroyed":false,"version":4}},"wrap_info":null,"warnings":null,"auth":null}
 
+```
+
+Now that we have confirmed the vault role binding works, let's deploy the go-getter-app:
+```
+kubectl apply -f go-getter-app.yaml
 ```
 
