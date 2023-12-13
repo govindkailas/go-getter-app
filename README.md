@@ -96,7 +96,7 @@ kubectl -n vault  exec -it vault-0 -- sh
 # After landing into the vault pod run the below,
 vault write auth/kubernetes/config token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt issuer="kubernetes/serviceaccount"
 ```
-_Note that it's important to mention `issuer="kubernetes/serviceaccount"` otherwise vault will reject the access as it will not know the token issuer. The issuer might be different if you are on a cloud provider k8s._ 
+⚠️_Note that it's important to mention `issuer="kubernetes/serviceaccount"` otherwise vault will reject the access as it will not know the token issuer. The issuer might be different if you are on a cloud provider k8s._ 
 
 The next step will be creating `namespace` and `service account` for deploying the `go-getter-app` which would talk to vault and fetch the secrets. 
 
