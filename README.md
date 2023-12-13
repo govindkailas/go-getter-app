@@ -49,7 +49,8 @@ statefulset.apps/vault   1/1     44s
 
 _Now that we have vault ready, let's write some secrets_ 
 ```
-kubectl -n vault  exec -it vault-0 -- vault kv put secret/apps/config appaname="go-getter-app" password="My_$tR0nG_Pas$!!" 
+kubectl -n vault  exec -it vault-0 -- vault secrets enable -version=2 -path="go-app" kv
+kubectl -n vault  exec -it vault-0 -- vault kv put go-app/user01 appaname="go-getter-app" password="My_Secure_Password" 
 ```
 
 You should see an output similar to this, take note of the `secret path` mentioned! We will need this later
@@ -75,7 +76,7 @@ kubectl -n vault  exec -it vault-0 -- sh
 # After landing into the vault pod run the below,
 
 vault policy write go-app-rw-policy - <<EOH
-path "secret/data/apps/*" {
+path "go-app/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 EOH
@@ -112,4 +113,35 @@ vault write auth/kubernetes/role/go-app-role \
         ttl=72h
 ```
 
-More to go ..
+How do we test if the vault role binding works as expected? Let's deploy a simple pod in the `go-app` namespace with the service account and check if it can read secrets from Vault:
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-client
+  namespace: go-app
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginx
+  serviceAccountName: go-app-vault-auth-sa
+
+```
+Save the abobe manifest as `vault-client.yaml` and run `kubectl apply -f vault-client.yaml`
+Once the pod is running, exec into it:
+```
+kubectl -n go-app exec -it vault-client -- bash
+apt update && apt install -y jq
+VAULT_ADDR=http://vault.vault:8200 # <vault service name>.<namespace>:<port>
+jwt_token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) #get the service account token which is mounted to the pod
+curl --request POST \
+    --data '{"jwt": "'$jwt_token'", "role": "go-app-role"}' \
+    ${VAULT_ADDR}/v1/auth/kubernetes/login | jq  # check if we are getting the expected result with client token
+access_token=$(curl -s --request POST --data '{"jwt": "$jwt_token", "role": "go-app-role"}' ${VAULT_ADDR}/v1/auth/kubernetes/login| jq -r .auth.client_token)
+curl -H "X-Vault-Token: $access_token" -H "X-Vault-Namespace: vault" -X GET ${VAULT_ADDR}/v1/go-app/data/user01
+## Result below shows the secret is retrieved successfully from vault
+{"request_id":"3f80cc09-48c0-ad3f-ee3d-43d966e80c67","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"appaname":"go-getter-app","password":"My_Secure_Password"},"metadata":{"created_time":"2023-12-13T06:03:04.584728825Z","custom_metadata":null,"deletion_time":"","destroyed":false,"version":4}},"wrap_info":null,"warnings":null,"auth":null}
+
+```
+

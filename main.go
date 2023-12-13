@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -26,19 +25,19 @@ func main() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Request - Port forwarding is working.")
+		log.Println("Received Request on default handler /")
 
 		// If the JWT path is setup then get the new token from Vault using the k8s Auth
 		jwtPath := os.Getenv("JWT_PATH")
 		if jwtPath != "" {
 			jwtFile, err := ioutil.ReadFile(jwtPath)
 			if err != nil {
-				fmt.Println("Error reading JWT file at", jwtPath, ": ", err)
+				log.Println("Error reading JWT file at", jwtPath, ": ", err)
 				return
 			}
 
 			jwt := string(jwtFile)
-			fmt.Println("Read JWT:", jwt)
+			log.Println("Read JWT:", jwt)
 
 			authPath := "auth/kubernetes/login"
 
@@ -52,7 +51,7 @@ func main() {
 			pl := VaultJWTPayload{Role: approle, JWT: jwt}
 			jwtPayload, err := json.Marshal(pl)
 			if err != nil {
-				fmt.Println("Error encoding Vault request JSON:", err)
+				log.Println("Error encoding Vault request JSON:", err)
 				return
 			}
 
@@ -60,15 +59,13 @@ func main() {
 			vaultLoginResponse := &VaultLoginResponse{}
 			err = SendRequest(vaultUrl+"/v1/"+authPath, "", "POST", jwtPayload, vaultLoginResponse)
 			if err != nil {
-				fmt.Println("Error getting response from Vault k8s login:", err)
-				fmt.Println("vault url is", vaultUrl+"/v1/"+authPath)
-				fmt.Println("vault login payload is", string(jwtPayload))
-				fmt.Println("vaultLoginResponse is ", vaultLoginResponse.Auth.ClientToken)
+				log.Println("Error getting response from Vault k8s login:", err)
+				log.Println("Approle used while trying to login:", approle)
 				return
 			}
 
 			vaultToken = vaultLoginResponse.Auth.ClientToken
-			fmt.Println("Retrieved token: ", vaultToken)
+			log.Println("Retrieved token: ", vaultToken)
 		}
 
 		secretsPath := os.Getenv("SECRET_PATH")
@@ -81,18 +78,54 @@ func main() {
 		vaultSecretResponse := &VaultSecretResponse{}
 		err := SendRequest(vaultUrl+"/v1/"+secretsPath, vaultToken, "GET", nil, &vaultSecretResponse)
 		if err != nil {
-			fmt.Println("Error getting secret from Vault:", err)
+			log.Println("Error getting secret from Vault:", err)
 			return
 		}
 
 		secretResponseData, ok := vaultSecretResponse.Data.Data.(map[string]interface{})
 		if ok {
 			for key, value := range secretResponseData {
-				fmt.Fprintf(w, "%s:%s ", key, value)
+				log.Println(w, "%s:%s ", key, value)
 			}
 		} else {
-			fmt.Println("Error getting the secret from Vault, cannot convert Data to map[string]interface{}")
+			log.Println("Error getting the secret from Vault, cannot convert Data to map[string]interface{}")
 		}
+	})
+
+	//Add one more handler for getting a secret from Vault based on a userid passed in the POST call
+	http.HandleFunc("/secret", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		log.Println("Received Request on hander /secret with POST method")
+		//Parse the userid from the request body
+		decoder := json.NewDecoder(r.Body)
+		var request struct {
+			UserId string `json:"userId"`
+		}
+		err := decoder.Decode(&request)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		//Send a request to Vault to retrieve the secret for given userid
+		secretPath := "go-app/data/" + request.UserId
+		vaultSecretResponse := &VaultSecretResponse{}
+		err = SendRequest(vaultUrl+"/v1/"+secretPath, vaultToken, "GET", nil, &vaultSecretResponse)
+		if err != nil {
+			log.Println("Error getting secret from Vault:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		//Write the secret response to the client
+		w.Header().Set("Content-Type", "application/json")
+		encoder := json.NewEncoder(w)
+		encoder.Encode(vaultSecretResponse)
+		//log the response
+		log.Println("Responding back to client with: ", vaultSecretResponse)
 	})
 
 	log.Println("Listening on port", port)
@@ -104,7 +137,7 @@ func main() {
 func SendRequest(url string, token string, requestType string, payload []byte, target interface{}) error {
 	req, err := http.NewRequest(requestType, url, bytes.NewBuffer(payload))
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		log.Println("Error creating request:", err)
 		return err
 	}
 
@@ -116,107 +149,9 @@ func SendRequest(url string, token string, requestType string, payload []byte, t
 	client := &http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request to Vault:", err)
+		log.Println("Error sending request to Vault:", err)
 		return err
 	}
 	defer res.Body.Close()
 	return json.NewDecoder(res.Body).Decode(target)
 }
-
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
-// package main
-
-// import (
-// 	"context"
-// 	"fmt"
-// 	"log"
-// 	"net/http"
-// 	"os"
-
-// 	"github.com/hashicorp/vault/api"
-// 	"github.com/hashicorp/vault/api/auth/kubernetes"
-// )
-
-// func main() {
-
-// 	http.HandleFunc("/secret", func(w http.ResponseWriter, r *http.Request) {
-// 		// Call getSecretWithKubernetesAuth()
-// 		secret, err := getSecretWithKubernetesAuth()
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		// Write secret to response
-// 		fmt.Fprint(w, secret)
-// 	})
-
-// 	http.ListenAndServe(":8080", nil)
-
-// }
-
-// // Fetches a key-value secret (kv-v2) after authenticating to Vault with a Kubernetes service account.
-// func getSecretWithKubernetesAuth() (string, error) {
-// 	// If set, the VAULT_ADDR environment variable will be the address that
-// 	// your pod uses to communicate with Vault.
-// 	vaultUrl := os.Getenv("VAULT_ADDR")
-// 	if vaultUrl == "" {
-// 		vaultUrl = "http://vault:8200"
-// 	}
-// 	config := api.DefaultConfig() // modify for more granular configuration
-
-// 	client, err := api.NewClient(config)
-// 	if err != nil {
-// 		return "", fmt.Errorf("unable to initialize Vault client: %w", err)
-// 	}
-
-// 	// The service-account token will be read from the path where the token's
-// 	// Kubernetes Secret is mounted. By default, Kubernetes will mount it to
-// 	// /var/run/secrets/kubernetes.io/serviceaccount/token, but an administrator
-// 	// may have configured it to be mounted elsewhere.
-// 	// In that case, we'll use the option WithServiceAccountTokenPath to look
-// 	// for the token there.
-// 	approle := os.Getenv("APPROLE")
-// 	if approle == "" {
-// 		approle = "webapp"
-// 		log.Println("APPROLE environment variable not set, defaulting to", approle)
-// 	}
-// 	k8sAuth, err := kubernetes.NewKubernetesAuth(
-// 		"go-app-role", // role name
-// 		kubernetes.WithServiceAccountTokenPath("/var/run/secrets/kubernetes.io/serviceaccount/token"),
-// 	)
-// 	if err != nil {
-// 		return "", fmt.Errorf("unable to initialize Kubernetes auth method: %w", err)
-// 	}
-
-// 	authInfo, err := client.Auth().Login(context.Background(), k8sAuth)
-// 	if err != nil {
-// 		return "", fmt.Errorf("unable to log in with Kubernetes auth: %w", err)
-// 	}
-// 	if authInfo == nil {
-// 		return "", fmt.Errorf("no auth info was returned after login")
-// 	}
-
-// 	// get secret from Vault, from the default mount path for KV v2 in dev mode, "secret"
-// 	secretsPath := os.Getenv("SECRET_PATH")
-// 	if secretsPath == "" {
-// 		secretsPath = "secret/data/webapp/config"
-// 		log.Println("SECRET_PATH environment variable not set, defaulting to", secretsPath)
-// 	}
-// 	secret, err := client.KVv2(secretsPath).Get(context.Background(), "creds")
-// 	if err != nil {
-// 		return "", fmt.Errorf("unable to read secret: %w", err)
-// 	}
-// 	//print secret
-// 	fmt.Println("Secret from vault is:", secret.Data)
-// 	// data map can contain more than one key-value pair,
-// 	// in this case we're just grabbing one of them
-// 	value, ok := secret.Data["password"].(string)
-// 	if !ok {
-// 		return "", fmt.Errorf("value type assertion failed: %T %#v", secret.Data["password"], secret.Data["password"])
-// 	}
-
-// 	return value, nil
-// }

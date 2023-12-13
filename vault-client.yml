@@ -15,20 +15,20 @@ spec:
       labels:
         app: go-app
     spec:
-      serviceAccountName: go-vault
+      serviceAccountName: go-app-vault-auth-sa
       containers:
         - name: app
           image: ghcr.io/govindkailas/go-getter-app:main
           imagePullPolicy: Always
           env:
             - name: VAULT_ADDR
-              value: 'http://vault.vault-namespace:8200'
+              value: 'http://vault.vault:8200'
             - name: JWT_PATH
               value: '/var/run/secrets/kubernetes.io/serviceaccount/token'
             - name: SERVICE_PORT
               value: '8080'
             - name: SECRET_PATH
-              value: 'kv/data/default-user'
+              value: 'go-app/data/user01'
             - name: APPROLE
               value: go-app-role  
           resources:
