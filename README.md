@@ -2,7 +2,7 @@
 go-getter-app is a simple go microservice that exposes two API endpoints to read and write to VAULT
 
 For the sake of clarity and easiness, let's deploy everything on Kubernetes.
-If you dont have K8s cluster, get one from (microk8s)[https://microk8s.io/#install-microk8s]
+If you dont have K8s cluster, get one from [microk8s](https://microk8s.io/#install-microk8s)
 
 _Create a namespace for vault_
 ```
@@ -19,7 +19,7 @@ _Deploy the vault helm chart_
 ```
 helm install vault hashicorp/vault --set "server.dev.enabled=true" --namespace vault
 ```
-This will bring up the vault in dev mode and it's not recommended for production use. If you would like to do a production-grade deployment, (check this)[https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-minikube-raft]
+This will bring up the vault in dev mode and it's not recommended for production use. If you would like to do a production-grade deployment, [check this](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-minikube-raft)
 
 _Check the status of helm deployment_
 ```
@@ -85,7 +85,7 @@ kubectl -n vault  exec -it vault-0 -- vault auth enable kubernetes
 kubectl -n vault  exec -it vault-0 -- vault auth list
 ```
 
-Now, we have to allow vault to communicate to K8s cluster using the `/config` endpoint using the token issued by the service account  (More details here)[https://developer.hashicorp.com/vault/docs/auth/kubernetes]
+Now, we have to allow vault to communicate to K8s cluster using the `/config` endpoint using the token issued by the service account  [More details here](https://developer.hashicorp.com/vault/docs/auth/kubernetes)
 ```
 kubectl -n vault  exec -it vault-0 -- sh
 # After landing into the vault pod run the below,
