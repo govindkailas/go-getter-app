@@ -99,7 +99,7 @@ kubectl create ns go-app
 kubectl -n go-app create serviceaccount go-app-vault-auth-sa
 ```
 
-_Let's bind it all together_ :) 
+_Let's bind it all together_ 😀
 ```
 vault write auth/kubernetes/role/go-app-role \
         bound_service_account_names=go-app-vault-auth-sa \
@@ -108,3 +108,4 @@ vault write auth/kubernetes/role/go-app-role \
         ttl=72h
 ```
 
+More to go ..
