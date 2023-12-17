@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -65,7 +66,7 @@ func main() {
 			}
 
 			vaultToken = vaultLoginResponse.Auth.ClientToken
-			log.Println("Retrieved token: ", vaultToken)
+			log.Println("Retrieved vault login token: ", vaultToken)
 		}
 
 		secretsPath := os.Getenv("SECRET_PATH")
@@ -85,7 +86,8 @@ func main() {
 		secretResponseData, ok := vaultSecretResponse.Data.Data.(map[string]interface{})
 		if ok {
 			for key, value := range secretResponseData {
-				log.Println(w, "%s:%s ", key, value)
+				// log.Println(w, "%s:%s ", key, value)
+				fmt.Fprintf(w, "%s:%s ", key, value)
 			}
 		} else {
 			log.Println("Error getting the secret from Vault, cannot convert Data to map[string]interface{}")
@@ -102,6 +104,7 @@ func main() {
 		//Parse the userid from the request body
 		decoder := json.NewDecoder(r.Body)
 		var request struct {
+			// suppose the request body is {"userId": "1234567890"}
 			UserId string `json:"userId"`
 		}
 		err := decoder.Decode(&request)
