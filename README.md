@@ -1,5 +1,7 @@
 # go-getter-app
 [![Docker Build](https://github.com/govindkailas/go-getter-app/actions/workflows/docker-publish.yaml/badge.svg)](https://github.com/govindkailas/go-getter-app/actions/workflows/docker-publish.yaml)
+
+
 The `go-getter-app` is a simple go microservice that exposes two API endpoints to read and write to [VAULT](https://developer.hashicorp.com/vault)
 
 For the sake of clarity and easiness, let's deploy everything on Kubernetes.
