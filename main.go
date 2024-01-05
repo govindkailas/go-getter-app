@@ -17,7 +17,7 @@ func main() {
 	port := os.Getenv("SERVICE_PORT")
 	if port == "" {
 		port = "8080"
-		log.Println("PORT environment variable not set, defaulting to", port)
+		log.Println("PORT environment variable not set, defaulting to ", port)
 	}
 
 	vaultUrl := os.Getenv("VAULT_ADDR")
@@ -45,7 +45,7 @@ func main() {
 			approle := os.Getenv("APPROLE")
 			if approle == "" {
 				approle = "webapp"
-				log.Println("APPROLE environment variable not set, defaulting to", approle)
+				log.Println("APPROLE environment variable not set, defaulting to ", approle)
 			}
 
 			// Create the payload for Vault authentication
@@ -72,7 +72,7 @@ func main() {
 		secretsPath := os.Getenv("SECRET_PATH")
 		if secretsPath == "" {
 			secretsPath = "secret/data/webapp/config"
-			log.Println("SECRET_PATH environment variable not set, defaulting to", secretsPath)
+			log.Println("SECRET_PATH environment variable not set, defaulting to ", secretsPath)
 		}
 
 		// Send a request to Vault using the token to retrieve the secret
