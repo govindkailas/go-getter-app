@@ -56,6 +56,8 @@ kubectl -n vault  exec -it vault-0 -- vault secrets enable -version=2 -path="go-
 kubectl -n vault  exec -it vault-0 -- vault kv put go-app/user01 appaname="go-getter-app" password="My_Secure_Password" 
 ```
 
+If vault cli is throwing `permission denied`, you might want to do `vault login` with the token.
+
 You should see an output similar to this, take note of the `secret path` mentioned! We will need this later
 ```
 ===== Secret Path =====
