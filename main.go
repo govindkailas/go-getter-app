@@ -12,7 +12,11 @@ import (
 )
 
 func main() {
-	vaultToken := "root"
+	vaultToken := os.Getenv("VAULT_TOKEN")
+	if vaultToken == "" {
+		vaultToken = "root"
+		log.Println("VAULT_TOKEN environment variable not set, defaulting to ", vaultToken)
+	}
 
 	port := os.Getenv("SERVICE_PORT")
 	if port == "" {
