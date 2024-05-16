@@ -62,11 +62,18 @@ func main() {
 
 			// Send a request to Vault to retrieve a token
 			vaultLoginResponse := &VaultLoginResponse{}
-			err = SendRequest(vaultUrl+"/v1/"+authPath, "", "POST", jwtPayload, vaultLoginResponse)
 			if err != nil {
-				log.Println("Error getting response from Vault k8s login:", err)
-				log.Println("Approle used while trying to login:", approle)
-				return
+				log.Println("Error sending request to Vault:", err)
+				if res.StatusCode == http.StatusForbidden {
+					log.Println("Invalid JWT token, please check if the token is expired or if you have access to the requested resource.")
+				}
+				return err
+			}
+
+			err = SendRequest(vaultUrl+authPath, "", "POST", jwtPayload, &vaultLoginResponse)
+			if err != nil {
+				log.Println("Error sending request to Vault:", err)
+				return err
 			}
 
 			vaultToken = vaultLoginResponse.Auth.ClientToken
@@ -79,13 +86,9 @@ func main() {
 			log.Println("SECRET_PATH environment variable not set, defaulting to ", secretsPath)
 		}
 
-		// Send a request to Vault using the token to retrieve the secret
-		vaultSecretResponse := &VaultSecretResponse{}
-		err := SendRequest(vaultUrl+"/v1/"+secretsPath, vaultToken, "GET", nil, &vaultSecretResponse)
-		if err != nil {
-			log.Println("Error getting secret from Vault:", err)
-			return
-		}
+		if vaultSecretResponse.Data == nil {
+			log.Println("Error getting secret from Vault: empty response")
+			return}
 
 		secretResponseData, ok := vaultSecretResponse.Data.Data.(map[string]interface{})
 		if ok {
